@@ -407,7 +407,7 @@ int main(int argc, char* argv[]) {
 
     // build a slam system
     std::string vocab_file_path_str = (without_vocab->is_set()) ? "" : vocab_file_path->value();
-    auto slam = std::make_shared<stella_vslam::system>(cfg, vocab_file_path_str);
+    auto slam = std::make_shared<stella_vslam::system>(cfg, vocab_file_path_str, "", "");
     bool need_initialize = true;
     if (map_db_path_in->is_set()) {
         need_initialize = false;

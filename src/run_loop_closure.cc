@@ -37,7 +37,7 @@ int run(const std::shared_ptr<stella_vslam::config>& cfg,
         const std::string& map_db_path,
         const std::string& viewer_string) {
     // build a SLAM system
-    auto slam = std::make_shared<stella_vslam::system>(cfg, vocab_file_path);
+    auto slam = std::make_shared<stella_vslam::system>(cfg, vocab_file_path, "", "");
     bool need_initialize = false;
     // load the prebuilt map
     if (!slam->load_map_database(map_db_path)) {
