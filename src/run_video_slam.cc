@@ -289,6 +289,9 @@ int main(int argc, char* argv[]) {
     auto help = op.add<popl::Switch>("h", "help", "produce help message");
     auto vocab_file_path = op.add<popl::Value<std::string>>("v", "vocab", "vocabulary file path");
     auto without_vocab = op.add<popl::Switch>("", "without-vocab", "run without vocabulary file");
+    auto extractor_model_path = op.add<popl::Value<std::string>>("", "extractor-model", "extractor model file path");
+    auto matcher_model_path = op.add<popl::Value<std::string>>("", "matcher-model", "matcher model file path");
+    auto use_cuda = op.add<popl::Switch>("", "use-cuda", "use CUDA for feature extraction and matching");
     auto video_file_path = op.add<popl::Value<std::string>>("m", "video", "video file path");
     auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
     auto mask_img_path = op.add<popl::Value<std::string>>("", "mask", "mask image path", "");
@@ -419,7 +422,7 @@ int main(int argc, char* argv[]) {
 
     // build a slam system
     std::string vocab_file_path_str = (without_vocab->is_set()) ? "" : vocab_file_path->value();
-    auto slam = std::make_shared<stella_vslam::system>(cfg, vocab_file_path_str);
+    auto slam = std::make_shared<stella_vslam::system>(cfg, vocab_file_path_str, extractor_model_path->value(), matcher_model_path->value(), use_cuda->is_set());
     bool need_initialize = true;
     if (map_db_path_in->is_set()) {
         need_initialize = false;
