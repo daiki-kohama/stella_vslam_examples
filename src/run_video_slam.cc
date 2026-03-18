@@ -40,6 +40,7 @@ int mono_tracking(const std::shared_ptr<stella_vslam::system>& slam,
                   const std::shared_ptr<stella_vslam::config>& cfg,
                   const std::string& video_file_path,
                   const std::string& mask_img_path,
+                  const std::string& mask_directory_path,
                   const unsigned int frame_skip,
                   const unsigned int start_time,
                   const bool no_sleep,
@@ -50,7 +51,17 @@ int mono_tracking(const std::shared_ptr<stella_vslam::system>& slam,
                   const double start_timestamp,
                   const std::string& viewer_string) {
     // load the mask image
-    const cv::Mat mask = mask_img_path.empty() ? cv::Mat{} : cv::imread(mask_img_path, cv::IMREAD_GRAYSCALE);
+    cv::Mat mask = mask_img_path.empty() ? cv::Mat{} : cv::imread(mask_img_path, cv::IMREAD_GRAYSCALE);
+
+    // prepare the mask directory path
+    std::string mask_dir;
+    if (!mask_directory_path.empty()) {
+        mask_dir = mask_directory_path;
+        const char sep = fs::path::preferred_separator;
+        while (mask_dir.size() > 1 && mask_dir.back() == sep) {
+            mask_dir.pop_back();
+        }
+    }
 
     // create a viewer object
     // and pass the frame_publisher and the map_publisher
@@ -159,6 +170,13 @@ int mono_tracking(const std::shared_ptr<stella_vslam::system>& slam,
 
             is_not_end = video.read(frame);
             double ms_since_start = video.get(cv::CAP_PROP_POS_MSEC);
+
+            if (!mask_dir.empty()) {
+                std::ostringstream zero_filled;
+                zero_filled << std::setw(5) << std::setfill('0') << num_frame;
+                const std::string mask_path = mask_dir + "/" + zero_filled.str() + ".png";
+                mask = cv::imread(mask_path, cv::IMREAD_GRAYSCALE);
+            }
 
             if (ms_since_start > 0) {
               timestamp = start_timestamp + (ms_since_start / 1000);
@@ -292,6 +310,7 @@ int main(int argc, char* argv[]) {
     auto video_file_path = op.add<popl::Value<std::string>>("m", "video", "video file path");
     auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
     auto mask_img_path = op.add<popl::Value<std::string>>("", "mask", "mask image path", "");
+    auto mask_directory_path = op.add<popl::Value<std::string>>("", "mask-dir", "mask directory path", "");
     auto frame_skip = op.add<popl::Value<unsigned int>>("", "frame-skip", "interval of frame skip", 1);
     auto start_time = op.add<popl::Value<unsigned int>>("s", "start-time", "time to start playing [milli seconds]", 0);
     auto no_sleep = op.add<popl::Switch>("", "no-sleep", "not wait for next frame in real time");
@@ -454,6 +473,7 @@ int main(int argc, char* argv[]) {
                             cfg,
                             video_file_path->value(),
                             mask_img_path->value(),
+                            mask_directory_path->value(),
                             frame_skip->value(),
                             start_time->value(),
                             no_sleep->is_set(),
